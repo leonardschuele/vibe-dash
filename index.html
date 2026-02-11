@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vibe Dash</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #dashboard {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    #chat {
+      width: 360px;
+      flex-shrink: 0;
+      border-left: 1px solid #2a2a3e;
+      background: #13131f;
+    }
+
+    /* Responsive: stack on narrow viewports */
+    @media (max-width: 768px) {
+      #app { flex-direction: column-reverse; }
+      #chat {
+        width: 100%;
+        height: 45vh;
+        border-left: none;
+        border-top: 1px solid #2a2a3e;
+      }
+      #dashboard { height: 55vh; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3a3a5c; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5a5a8c; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="dashboard"></div>
+    <div id="chat"></div>
+  </div>
+
+  <!--
+    AI Widget Generator config (optional).
+    Set an OpenAI-compatible API key to enable AI-generated widgets.
+    Without this, requests that don't match crypto/weather will show an error.
+
+    <script>
+      window.VIBE_DASH_CONFIG = {
+        apiKey: 'sk-...',
+        // apiUrl: 'https://api.openai.com/v1/chat/completions',  // default
+        // model: 'gpt-4o-mini',                                   // default
+      };
+    </script>
+  -->
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
