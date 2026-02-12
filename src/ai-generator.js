@@ -84,6 +84,14 @@ export function createAiWidgetGenerator(config = {}) {
         };
       }
 
+      if (resp.status === 402) {
+        return {
+          kind: 'error',
+          message: 'OpenRouter account has no credits. Add credits at openrouter.ai and try again.',
+          retryable: false
+        };
+      }
+
       if (resp.status === 429) {
         return {
           kind: 'error',
