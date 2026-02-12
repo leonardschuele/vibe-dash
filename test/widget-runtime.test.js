@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWidgetRuntime } from '../src/widget-runtime.js';
 
@@ -345,6 +345,19 @@ describe('getWidgets', () => {
 });
 
 describe('boot', () => {
+  // boot() starts setInterval timers for refreshable widgets.
+  // We must remove all widgets after each test to clear timers,
+  // otherwise Node's event loop stays alive and the test runner hangs.
+  let runtime;
+
+  afterEach(() => {
+    if (runtime) {
+      for (const w of runtime.getWidgets()) {
+        runtime.removeWidget(w.id);
+      }
+    }
+  });
+
   it('hydrates persisted widgets with data: null and lastUpdated: 0', async () => {
     const bus = createMockBus();
     const persisted = [
@@ -359,7 +372,7 @@ describe('boot', () => {
       }
     ];
     const persistence = createMockPersistence(persisted);
-    const runtime = createWidgetRuntime(bus, persistence, createMockRouter());
+    runtime = createWidgetRuntime(bus, persistence, createMockRouter());
 
     await runtime.boot();
 
@@ -392,7 +405,7 @@ describe('boot', () => {
       }
     };
     const persistence = createMockPersistence(persisted);
-    const runtime = createWidgetRuntime(bus, persistence, mockRouter);
+    runtime = createWidgetRuntime(bus, persistence, mockRouter);
 
     await runtime.boot();
 
@@ -429,7 +442,7 @@ describe('boot', () => {
       }
     ];
     const persistence = createMockPersistence(persisted);
-    const runtime = createWidgetRuntime(bus, persistence, mockRouter);
+    runtime = createWidgetRuntime(bus, persistence, mockRouter);
 
     await runtime.boot();
 
