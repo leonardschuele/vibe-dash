@@ -32,10 +32,10 @@ npx serve .
 
 ### API key for AI widgets
 
-AI-generated widgets use [OpenRouter](https://openrouter.ai) to call Claude. Set your key in the chat:
+AI-generated widgets call the Anthropic API directly from the browser. Set your key in the chat:
 
 ```
-/key sk-or-your-key-here
+/key sk-ant-your-key-here
 ```
 
 Other key commands:
@@ -45,7 +45,7 @@ Other key commands:
 /key clear        Remove stored key
 ```
 
-The key is stored in `localStorage` and never leaves your browser except in direct API calls to OpenRouter.
+The key is stored in `localStorage` and never leaves your browser except in direct API calls to Anthropic. Get a key at [console.anthropic.com](https://console.anthropic.com).
 
 ## Widget management
 
@@ -72,7 +72,7 @@ src/
   widget-runtime.js        Widget state, refresh timers, persistence
   layout-engine.js         DOM rendering, CSS, widget templates
   persistence.js           localStorage read/write
-  ai-generator.js          OpenRouter/Claude integration
+  ai-generator.js          Anthropic Claude API integration
   sources/
     crypto.js              CoinGecko price data
     weather.js             Open-Meteo forecast data

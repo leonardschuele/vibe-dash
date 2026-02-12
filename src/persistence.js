@@ -92,12 +92,12 @@ export function createPersistenceLayer() {
       localStorage.removeItem(STORAGE_KEY);
     },
 
-    /** Get stored OpenRouter API key, or null. */
+    /** Get stored Anthropic API key, or null. */
     getApiKey() {
       return localStorage.getItem(API_KEY_KEY) || null;
     },
 
-    /** Store (or remove) the OpenRouter API key. */
+    /** Store (or remove) the Anthropic API key. */
     setApiKey(key) {
       if (key) localStorage.setItem(API_KEY_KEY, key);
       else localStorage.removeItem(API_KEY_KEY);

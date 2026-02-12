@@ -4,14 +4,14 @@
 //   createAiWidgetGenerator(config)
 //   generate(intent) → Promise<DataSourceResult>
 //
-// Calls OpenRouter's chat completions API (OpenAI-compatible) to produce
+// Calls the Anthropic Messages API directly from the browser to produce
 // self-contained HTML/CSS/JS rendered inside a sandboxed iframe.
 //
 // Config:
 //   getApiKey: () → string|null — lazy key lookup (checked per call)
 
-const DEFAULT_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_MODEL = 'anthropic/claude-sonnet-4';
+const DEFAULT_API_URL = 'https://api.anthropic.com/v1/messages';
+const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 
 const SYSTEM_PROMPT = `You are a dashboard widget generator. Given a user's request, produce a single self-contained HTML document that visualizes or implements what they asked for.
 
@@ -41,7 +41,7 @@ export function createAiWidgetGenerator(config = {}) {
       if (!apiKey) {
         return {
           kind: 'error',
-          message: 'AI widget generation requires an API key. Use /key your-key-here to set your OpenRouter key.',
+          message: 'AI widget generation requires an API key. Use /key your-key-here to set your Anthropic API key.',
           retryable: false
         };
       }
@@ -54,18 +54,17 @@ export function createAiWidgetGenerator(config = {}) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'HTTP-Referer': 'https://github.com/anthropics/vibe-dash',
-            'X-Title': 'Vibe Dash'
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
           },
           body: JSON.stringify({
             model,
+            system: SYSTEM_PROMPT,
             messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
               { role: 'user', content: userPrompt }
             ],
-            max_tokens: 4096,
-            temperature: 0.7
+            max_tokens: 4096
           })
         });
       } catch (e) {
@@ -80,14 +79,6 @@ export function createAiWidgetGenerator(config = {}) {
         return {
           kind: 'error',
           message: 'AI API key is invalid or expired.',
-          retryable: false
-        };
-      }
-
-      if (resp.status === 402) {
-        return {
-          kind: 'error',
-          message: 'OpenRouter account has no credits. Add credits at openrouter.ai and try again.',
           retryable: false
         };
       }
@@ -119,7 +110,7 @@ export function createAiWidgetGenerator(config = {}) {
         };
       }
 
-      const content = body.choices?.[0]?.message?.content;
+      const content = body.content?.[0]?.text;
       if (!content) {
         return {
           kind: 'error',

@@ -343,7 +343,7 @@ runtime.boot().then(() => {
   if (!persistence.getApiKey()) {
     bus.emit('system:message', {
       type: 'info',
-      text: `Welcome to Vibe Dash! Describe any widget in plain English to get started.\n\nBuilt-in sources (crypto, weather, news) work right away \u2014 try \u201Cbitcoin price\u201D or \u201Cweather in Denver.\u201D\n\nFor custom AI-generated widgets, set your OpenRouter API key:\n  /key your-key-here\n\nGet a key at openrouter.ai`
+      text: `Welcome to Vibe Dash! Describe any widget in plain English to get started.\n\nBuilt-in sources (crypto, weather, news) work right away \u2014 try \u201Cbitcoin price\u201D or \u201Cweather in Denver.\u201D\n\nFor custom AI-generated widgets, set your Anthropic API key:\n  /key your-key-here\n\nGet a key at console.anthropic.com`
     });
   }
 }).catch(e => {
