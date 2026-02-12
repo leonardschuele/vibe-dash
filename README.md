@@ -16,7 +16,7 @@ Type into the chat panel. Vibe Dash parses your request, matches it to a data so
 - **Weather** — "weather in Denver", "Tokyo forecast" (Open-Meteo API)
 - **News** — "tech news", "news about AI" (HackerNews/Algolia API)
 
-**AI-generated widgets** (requires OpenRouter API key):
+**AI-generated widgets** (requires Anthropic API key):
 
 Anything that doesn't match a built-in source falls through to an LLM that generates a self-contained HTML widget rendered in a sandboxed iframe. Ask for a pomodoro timer, a color palette, a unit converter — if you can describe it, the dashboard builds it.
 
@@ -57,6 +57,10 @@ remove the weather widget  Remove by name
 ```
 
 Widgets persist across page reloads. Data sources with refresh intervals (crypto, weather, news) auto-update; AI-generated widgets are static.
+
+**Drag to reorder** — grab any widget and drag it to a new position. The order is saved automatically.
+
+**Resize** — hover over a widget and click the resize button (↕) to cycle through small → medium → large.
 
 ## Architecture
 
