@@ -53,7 +53,10 @@ export function createChatShell(bus, container) {
     msg.className = `chat-msg chat-msg-${role} chat-msg-${type}`;
 
     if (typeof content === 'string') {
-      msg.innerHTML = `<p>${escapeHtml(content)}</p>`;
+      msg.innerHTML = escapeHtml(content)
+        .split('\n')
+        .map(line => `<p>${line}</p>`)
+        .join('');
     } else {
       msg.appendChild(content);
     }
@@ -231,6 +234,8 @@ function injectStyles() {
     }
 
     .chat-msg p { margin: 0; }
+    .chat-msg p + p { margin-top: 0.4em; }
+    .chat-msg p:empty { margin-top: 0.6em; }
 
     .chat-msg-user {
       align-self: flex-end;

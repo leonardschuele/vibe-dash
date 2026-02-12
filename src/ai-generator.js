@@ -4,16 +4,14 @@
 //   createAiWidgetGenerator(config)
 //   generate(intent) → Promise<DataSourceResult>
 //
-// Calls an OpenAI-compatible chat completions API to produce
+// Calls OpenRouter's chat completions API (OpenAI-compatible) to produce
 // self-contained HTML/CSS/JS rendered inside a sandboxed iframe.
 //
 // Config:
-//   apiKey:  string (required) — bearer token for the LLM API
-//   apiUrl:  string (optional) — defaults to OpenAI's chat completions endpoint
-//   model:   string (optional) — defaults to "gpt-4o-mini"
+//   getApiKey: () → string|null — lazy key lookup (checked per call)
 
-const DEFAULT_API_URL = 'https://api.openai.com/v1/chat/completions';
-const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const DEFAULT_MODEL = 'anthropic/claude-sonnet-4';
 
 const SYSTEM_PROMPT = `You are a dashboard widget generator. Given a user's request, produce a single self-contained HTML document that visualizes or implements what they asked for.
 
@@ -29,7 +27,7 @@ Rules:
 - Keep it simple. One clear visualization or interaction per widget.`;
 
 export function createAiWidgetGenerator(config = {}) {
-  const apiKey = config.apiKey || null;
+  const getApiKey = config.getApiKey || (() => null);
   const apiUrl = config.apiUrl || DEFAULT_API_URL;
   const model = config.model || DEFAULT_MODEL;
 
@@ -39,10 +37,11 @@ export function createAiWidgetGenerator(config = {}) {
      * @returns {Promise<import('../contracts').DataSourceResult>}
      */
     async generate(intent) {
+      const apiKey = getApiKey();
       if (!apiKey) {
         return {
           kind: 'error',
-          message: 'AI widget generation requires an API key. Configure one to enable custom widgets.',
+          message: 'AI widget generation requires an API key. Use /key your-key-here to set your OpenRouter key.',
           retryable: false
         };
       }
@@ -55,7 +54,9 @@ export function createAiWidgetGenerator(config = {}) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': 'https://github.com/anthropics/vibe-dash',
+            'X-Title': 'Vibe Dash'
           },
           body: JSON.stringify({
             model,

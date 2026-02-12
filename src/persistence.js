@@ -6,6 +6,7 @@
 // Returns [] on missing or corrupt data — never throws.
 
 const STORAGE_KEY = 'vibe-dash-widgets';
+const API_KEY_KEY = 'vibe-dash-api-key';
 const DEBOUNCE_MS = 500;
 
 const PERSISTED_KEYS = [
@@ -89,6 +90,22 @@ export function createPersistenceLayer() {
     clear() {
       clearTimeout(debounceTimer);
       localStorage.removeItem(STORAGE_KEY);
+    },
+
+    /** Get stored OpenRouter API key, or null. */
+    getApiKey() {
+      return localStorage.getItem(API_KEY_KEY) || null;
+    },
+
+    /** Store (or remove) the OpenRouter API key. */
+    setApiKey(key) {
+      if (key) localStorage.setItem(API_KEY_KEY, key);
+      else localStorage.removeItem(API_KEY_KEY);
+    },
+
+    /** Remove the stored API key. */
+    clearApiKey() {
+      localStorage.removeItem(API_KEY_KEY);
     }
   };
 }

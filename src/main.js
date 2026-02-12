@@ -42,9 +42,9 @@ const sources = [
 ];
 
 // 5. AiWidgetGenerator
-const aiGenerator = createAiWidgetGenerator(
-  window.VIBE_DASH_CONFIG || {}
-);
+const aiGenerator = createAiWidgetGenerator({
+  getApiKey: () => persistence.getApiKey()
+});
 
 // 6. SourceRouter
 const router = createSourceRouter(bus, sources, aiGenerator);
@@ -76,6 +76,13 @@ createChatShell(bus, chatEl);
 
 bus.on('user:message', async (text) => {
   try {
+    // /key command — intercept before intent parser
+    const keyMatch = text.trim().match(/^\/key(?:\s+(.*))?$/);
+    if (keyMatch) {
+      handleKeyCommand(keyMatch[1]?.trim() || null);
+      return;
+    }
+
     const intent = parser.parse(text);
 
     switch (intent.action) {
@@ -277,6 +284,49 @@ function resolveTarget(intent) {
 
 
 // ============================================================================
+// /key command handler
+// ============================================================================
+
+function handleKeyCommand(arg) {
+  if (!arg) {
+    // Show current key status
+    const key = persistence.getApiKey();
+    if (key) {
+      const masked = key.length > 8
+        ? key.slice(0, 5) + '...' + key.slice(-4)
+        : '****';
+      bus.emit('system:message', {
+        type: 'info',
+        text: `API key is set: ${masked}`
+      });
+    } else {
+      bus.emit('system:message', {
+        type: 'info',
+        text: 'No API key set. Use /key your-key-here to set one.'
+      });
+    }
+    return;
+  }
+
+  if (arg === 'clear') {
+    persistence.clearApiKey();
+    bus.emit('system:message', {
+      type: 'success',
+      text: 'API key cleared.'
+    });
+    return;
+  }
+
+  // Set the key
+  persistence.setApiKey(arg);
+  bus.emit('system:message', {
+    type: 'success',
+    text: 'API key saved. AI-generated widgets are now enabled.'
+  });
+}
+
+
+// ============================================================================
 // Lifecycle
 // ============================================================================
 
@@ -289,7 +339,14 @@ window.addEventListener('beforeunload', () => {
 // Boot (contracts.ts step 11)
 // ============================================================================
 
-runtime.boot().catch(e => {
+runtime.boot().then(() => {
+  if (!persistence.getApiKey()) {
+    bus.emit('system:message', {
+      type: 'info',
+      text: `Welcome to Vibe Dash! Describe any widget in plain English to get started.\n\nBuilt-in sources (crypto, weather, news) work right away \u2014 try \u201Cbitcoin price\u201D or \u201Cweather in Denver.\u201D\n\nFor custom AI-generated widgets, set your OpenRouter API key:\n  /key your-key-here\n\nGet a key at openrouter.ai`
+    });
+  }
+}).catch(e => {
   console.error('[vibe-dash] Boot failed:', e);
   bus.emit('system:message', {
     type: 'error',
