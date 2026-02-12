@@ -111,6 +111,7 @@ export interface IntentParameters {
   symbol?: string;             // "BTC", "ETH", "SOL"
   period?: string;             // "24h", "7d", "30d", "1y"
   count?: number;              // "top 5 coins", "last 10 headlines"
+  topic?: string;              // "ai", "rust", "bitcoin" — for news/article queries
   displayFormat?: DisplayFormat;  // "chart", "card", "table"
   size?: WidgetSize;           // explicit size request: "make it bigger"
   query?: string;              // freeform search terms that don't fit other keys
@@ -171,6 +172,7 @@ export interface WidgetRenderSpec {
 export type RenderType =
   | "price-card"
   | "weather-card"
+  | "news-card"
   | "chart"
   | "html-block"
   | "generic";
@@ -179,6 +181,7 @@ export type RenderType =
 export type RenderConfig =
   | PriceCardConfig
   | WeatherCardConfig
+  | NewsCardConfig
   | ChartConfig
   | HtmlBlockConfig
   | GenericConfig;
@@ -194,6 +197,12 @@ export interface WeatherCardConfig {
   type: "weather-card";
   location: string;
   units: "imperial" | "metric";
+}
+
+export interface NewsCardConfig {
+  type: "news-card";
+  topic: string | null;
+  source: "hackernews";
 }
 
 export interface ChartConfig {

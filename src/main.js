@@ -13,6 +13,7 @@ import { createPersistenceLayer } from './persistence.js';
 import { createIntentParser } from './intent-parser.js';
 import { createCryptoSource } from './sources/crypto.js';
 import { createWeatherSource } from './sources/weather.js';
+import { createNewsSource } from './sources/news.js';
 import { createAiWidgetGenerator } from './ai-generator.js';
 import { createSourceRouter } from './source-router.js';
 import { createWidgetRuntime } from './widget-runtime.js';
@@ -37,6 +38,7 @@ const parser = createIntentParser();
 const sources = [
   createCryptoSource(),
   createWeatherSource(),
+  createNewsSource(),
 ];
 
 // 5. AiWidgetGenerator

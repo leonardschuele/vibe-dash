@@ -137,6 +137,9 @@ export function createLayoutEngine(bus, container, removeWidget) {
       case 'weather-card':
         renderWeatherCard(container, widget);
         break;
+      case 'news-card':
+        renderNewsCard(container, widget);
+        break;
       case 'html-block':
         renderHtmlBlock(container, widget);
         break;
@@ -203,6 +206,45 @@ export function createLayoutEngine(bus, container, removeWidget) {
         </div>
         ${forecastHtml}
       </div>
+    `;
+  }
+
+  // --- News Card ---
+
+  function renderNewsCard(container, widget) {
+    const d = widget.data;
+    const stories = d.stories || [];
+
+    if (stories.length === 0) {
+      container.innerHTML = '<div class="widget-loading">No stories found</div>';
+      return;
+    }
+
+    const items = stories.map((story, i) => {
+      const domain = extractDomain(story.url);
+      const timeAgo = formatTimeAgo(story.createdAt);
+      const titleHtml = escapeHtml(story.title);
+      const authorHtml = story.author ? escapeHtml(story.author) : '';
+
+      return `
+        <li class="news-story">
+          <span class="news-rank">${i + 1}.</span>
+          <div class="news-story-body">
+            <a class="news-story-link" href="${escapeAttr(story.url)}" target="_blank" rel="noopener noreferrer">${titleHtml}</a>
+            <div class="news-meta">
+              ${domain ? `<span class="news-domain">${escapeHtml(domain)}</span>` : ''}
+              ${story.points != null ? `<span>${story.points} pts</span>` : ''}
+              ${story.commentCount != null ? `<a class="news-comments" href="${escapeAttr(story.commentUrl)}" target="_blank" rel="noopener noreferrer">${story.commentCount} comments</a>` : ''}
+              ${authorHtml ? `<span>by ${authorHtml}</span>` : ''}
+              ${timeAgo ? `<span>${timeAgo}</span>` : ''}
+            </div>
+          </div>
+        </li>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <ol class="news-list">${items}</ol>
     `;
   }
 
@@ -294,6 +336,31 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function formatTimeAgo(isoString) {
+  if (!isoString) return '';
+  const seconds = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function extractDomain(url) {
+  if (!url) return '';
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
 }
 
 
@@ -544,6 +611,83 @@ function injectStyles() {
 
     .weather-fc-lo {
       color: #555;
+    }
+
+    /* --- News card --- */
+
+    .news-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .news-list::-webkit-scrollbar { width: 4px; }
+    .news-list::-webkit-scrollbar-track { background: transparent; }
+    .news-list::-webkit-scrollbar-thumb { background: #1e1e3a; border-radius: 2px; }
+
+    .news-story {
+      display: flex;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #1a1a30;
+    }
+
+    .news-story:last-child {
+      border-bottom: none;
+    }
+
+    .news-rank {
+      color: #444;
+      font-size: 12px;
+      min-width: 22px;
+      text-align: right;
+      padding-top: 1px;
+      flex-shrink: 0;
+    }
+
+    .news-story-body {
+      min-width: 0;
+    }
+
+    .news-story-link {
+      color: #d0d0e0;
+      text-decoration: none;
+      font-size: 13px;
+      line-height: 1.4;
+      display: block;
+      word-wrap: break-word;
+    }
+
+    .news-story-link:visited {
+      color: #8888a0;
+    }
+
+    .news-story-link:hover {
+      color: #fff;
+    }
+
+    .news-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 3px;
+      font-size: 11px;
+      color: #555;
+    }
+
+    .news-domain {
+      color: #666;
+    }
+
+    .news-comments {
+      color: #555;
+      text-decoration: none;
+    }
+
+    .news-comments:hover {
+      color: #4ecdc4;
     }
 
     /* --- HTML block (iframe) --- */

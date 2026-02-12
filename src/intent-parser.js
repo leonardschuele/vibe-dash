@@ -119,6 +119,32 @@ function extractParameters(lower) {
     params.location = locationMatch;
   }
 
+  // Topic: "news about X", "X news", "latest on X", "headlines about X"
+  // Strip leading action verbs to avoid capturing "show me" as topic
+  const cleaned = lower
+    .replace(/^(?:show\s+me|display|give\s+me|what(?:'s|s|\s+is|\s+are)?|track|monitor|add|create|i\s+want|let\s+me\s+see|pull\s+up|get|tell\s+me|can\s+(?:you|i)\s+(?:see|get|have)?|please)\s+/i, '')
+    .replace(/^(?:the|a|an|some|my)\s+/i, '');
+
+  // Strip count prefixes so "top 5 rust news" matches topic "rust" not "top 5 rust"
+  const topicText = cleaned.replace(/^(?:top|last|first)\s+\d+\s+/i, '');
+
+  const topicPatterns = [
+    /\b(?:news|headlines?|stories|articles)\s+(?:about|on|for|regarding)\s+(.+?)(?:\s+(?:right now|today|please|for me))?$/i,
+    /\b(?:latest|trending|what's new|what's happening)\s+(?:in|on|about|for)\s+(.+?)(?:\s+(?:right now|today|please|for me))?$/i,
+    /\b(\w+(?:\s+\w+){0,2})\s+(?:news|headlines?|stories|articles)\b/i,
+  ];
+  const TOPIC_STOP = /^(top|latest|recent|new|front\s+page|some|more|all)$/i;
+  for (const re of topicPatterns) {
+    const m = topicText.match(re);
+    if (m) {
+      let candidate = m[1].trim().replace(/^(?:the|a|an|some)\s+/i, '');
+      if (candidate.length >= 2 && !/^(in|at|near)\b/i.test(candidate) && !TOPIC_STOP.test(candidate)) {
+        params.topic = candidate;
+        break;
+      }
+    }
+  }
+
   // Period
   for (const { pattern, value } of PERIOD_MAP) {
     if (pattern.test(lower)) { params.period = value; break; }
