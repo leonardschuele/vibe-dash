@@ -1,7 +1,7 @@
 // layout-engine.js — Dashboard grid renderer
 //
 // Contract:
-//   createLayoutEngine(bus, container, removeWidget)
+//   createLayoutEngine(bus, container, { removeWidget, reorderWidgets, resizeWidget })
 //   Listens: "widgets:changed"
 //   Emits:   nothing (leaf component)
 //
@@ -10,9 +10,12 @@
 // Reconciles: creates new widgets, updates existing, animates out removed.
 // Does NOT own state — pure projection of the widget array onto the DOM.
 
-export function createLayoutEngine(bus, container, removeWidget) {
+export function createLayoutEngine(bus, container, { removeWidget, reorderWidgets, resizeWidget }) {
   /** @type {Map<string, { element: HTMLElement, lastUpdated: number, renderType: string }>} */
   const rendered = new Map();
+
+  /** @type {boolean} True while a drag is in progress — suppresses reconciliation */
+  let dragging = false;
 
   injectStyles();
 
@@ -29,9 +32,37 @@ export function createLayoutEngine(bus, container, removeWidget) {
   `;
   grid.appendChild(emptyState);
 
+  // --- SortableJS ---
+
+  new Sortable(grid, {
+    draggable: '.widget-card',
+    filter: '.widget-remove, .widget-resize, a, button, input, textarea, iframe',
+    preventOnFilter: false,
+    delay: 150,
+    delayOnTouchOnly: true,
+    animation: 150,
+    ghostClass: 'widget-ghost',
+    chosenClass: 'widget-chosen',
+    onStart() {
+      dragging = true;
+    },
+    onEnd() {
+      const orderedIds = [];
+      for (const child of grid.children) {
+        if (child.dataset && child.dataset.widgetId) {
+          orderedIds.push(child.dataset.widgetId);
+        }
+      }
+      reorderWidgets(orderedIds);
+      dragging = false;
+    }
+  });
+
   // --- Reconciliation ---
 
   bus.on('widgets:changed', (widgets) => {
+    if (dragging) return;
+
     const currentIds = new Set(widgets.map(w => w.id));
 
     // Remove widgets that are no longer present
@@ -68,6 +99,14 @@ export function createLayoutEngine(bus, container, removeWidget) {
       }
     }
 
+    // Reconcile DOM order to match widget array order
+    for (let i = 0; i < widgets.length; i++) {
+      const entry = rendered.get(widgets[i].id);
+      if (entry && entry.element !== grid.children[i]) {
+        grid.insertBefore(entry.element, grid.children[i]);
+      }
+    }
+
     // Show/hide empty state
     emptyState.style.display = widgets.length === 0 ? '' : 'none';
   });
@@ -78,6 +117,21 @@ export function createLayoutEngine(bus, container, removeWidget) {
     const card = document.createElement('div');
     card.className = `widget-card widget-${widget.size}`;
     card.dataset.widgetId = widget.id;
+
+    // Resize button
+    const resizeBtn = document.createElement('button');
+    resizeBtn.className = 'widget-resize';
+    resizeBtn.innerHTML = '&#x21C5;';
+    resizeBtn.title = 'Cycle size';
+    resizeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sizeOrder = ['small', 'medium', 'large'];
+      const current = card.className.match(/widget-(small|medium|large)/);
+      const currentSize = current ? current[1] : 'small';
+      const nextSize = sizeOrder[(sizeOrder.indexOf(currentSize) + 1) % sizeOrder.length];
+      resizeWidget(widget.id, nextSize);
+    });
+    card.appendChild(resizeBtn);
 
     // Remove button
     const btn = document.createElement('button');
@@ -426,6 +480,16 @@ function injectStyles() {
       position: relative;
       animation: widget-enter 0.3s ease-out;
       transition: opacity 0.25s ease, transform 0.25s ease;
+      cursor: grab;
+    }
+
+    .widget-card:active { cursor: grabbing; }
+
+    .widget-ghost { opacity: 0.3; }
+
+    .widget-chosen {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      z-index: 10;
     }
 
     .widget-card.widget-exiting {
@@ -471,11 +535,43 @@ function injectStyles() {
       font-family: inherit;
     }
 
-    .widget-card:hover .widget-remove { opacity: 1; }
+    .widget-card:hover .widget-remove,
+    .widget-card:hover .widget-resize { opacity: 1; }
+
     .widget-remove:hover {
       background: rgba(255, 80, 80, 0.15);
       border-color: rgba(255, 80, 80, 0.2);
       color: #f88;
+    }
+
+    /* --- Resize button --- */
+
+    .widget-resize {
+      position: absolute;
+      top: 12px;
+      right: 42px;
+      width: 26px;
+      height: 26px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      color: #555;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .widget-resize:hover {
+      background: rgba(78, 205, 196, 0.15);
+      border-color: rgba(78, 205, 196, 0.2);
+      color: #4ecdc4;
     }
 
     /* --- Title --- */

@@ -384,11 +384,13 @@ export type ErrorCode =
 //   - Emits:   "widgets:changed"
 //   - Called:   addWidget(), removeWidget(), updateWidget(), boot()
 //
-// LayoutEngine(bus: EventBus, container: HTMLElement, removeWidget: RemoveWidgetFn)
+// LayoutEngine(bus: EventBus, container: HTMLElement, callbacks: LayoutEngineCallbacks)
 //   - Listens: "widgets:changed"
 //   - Emits:   (nothing — leaf component, renders to DOM)
 //   - Calls:   WidgetRuntime.removeWidget() when user clicks X
-//             (receives removeWidget as a callback, does NOT import Runtime)
+//              WidgetRuntime.reorderWidgets() after drag-and-drop
+//              WidgetRuntime.updateWidget() when user clicks resize
+//             (receives callbacks as an object, does NOT import Runtime)
 //
 // PersistenceLayer()
 //   - Pure. No bus dependency.
@@ -402,8 +404,14 @@ export type ErrorCode =
 //   - Signature: generate(intent: Intent) → Promise<DataSourceResult>
 //   - Requires LLM API key (read from env or config at construction).
 
-// For LayoutEngine's remove callback:
+// For LayoutEngine's callbacks:
 export type RemoveWidgetFn = (widgetId: string) => void;
+
+export interface LayoutEngineCallbacks {
+  removeWidget: RemoveWidgetFn;
+  reorderWidgets: (orderedIds: string[]) => void;
+  resizeWidget: (widgetId: string, newSize: WidgetSize) => void;
+}
 
 
 // ----------------------------------------------------------------------------

@@ -179,6 +179,26 @@ export function createWidgetRuntime(bus, persistence, router) {
     },
 
     /**
+     * Reorder widgets to match the given ID order.
+     * Called after drag-and-drop — DOM is already correct, so no emit.
+     * @param {string[]} orderedIds
+     */
+    reorderWidgets(orderedIds) {
+      const byId = new Map(widgets.map(w => [w.id, w]));
+      const reordered = [];
+      for (const id of orderedIds) {
+        const w = byId.get(id);
+        if (w) reordered.push(w);
+      }
+      // Append any widgets not in orderedIds (shouldn't happen, but defensive)
+      for (const w of widgets) {
+        if (!reordered.includes(w)) reordered.push(w);
+      }
+      widgets = reordered;
+      save();
+    },
+
+    /**
      * Returns a shallow copy of the current widget array.
      * @returns {import('../contracts').WidgetDescriptor[]}
      */

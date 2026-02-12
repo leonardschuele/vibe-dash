@@ -54,14 +54,22 @@ const runtime = createWidgetRuntime(bus, persistence, router);
 
 // 8. LayoutEngine
 const dashboardEl = document.getElementById('dashboard');
-createLayoutEngine(bus, dashboardEl, (id) => {
-  const widget = runtime.getWidgets().find(w => w.id === id);
-  runtime.removeWidget(id);
-  if (widget) {
-    bus.emit('system:message', {
-      type: 'info',
-      text: `Removed "${widget.title}".`
-    });
+createLayoutEngine(bus, dashboardEl, {
+  removeWidget(id) {
+    const widget = runtime.getWidgets().find(w => w.id === id);
+    runtime.removeWidget(id);
+    if (widget) {
+      bus.emit('system:message', {
+        type: 'info',
+        text: `Removed "${widget.title}".`
+      });
+    }
+  },
+  reorderWidgets(orderedIds) {
+    runtime.reorderWidgets(orderedIds);
+  },
+  resizeWidget(id, newSize) {
+    runtime.updateWidget(id, { size: newSize });
   }
 });
 
