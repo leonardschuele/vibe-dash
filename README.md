@@ -1,5 +1,7 @@
 # Vibe Dash
 
+[![CI](https://github.com/leonardschuele/vibe-dash/actions/workflows/ci.yml/badge.svg)](https://github.com/leonardschuele/vibe-dash/actions/workflows/ci.yml)
+
 A natural-language dashboard that turns plain English into live widgets. Type what you want to see — crypto prices, weather, news, or anything else — and it appears on your dashboard.
 
 **[Try it live](https://leonardschuele.github.io/vibe-dash/)**
